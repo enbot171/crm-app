@@ -1,0 +1,47 @@
+"use client";
+
+import BottomNav from "./BottomNav";
+import SideNav from "./SideNav";
+import { useRouter } from "next/navigation";
+import { FiChevronLeft } from "react-icons/fi";
+import { useSidebar } from "@/context/SidebarContext";
+
+export default function PageShell({ title, rightAction, children, backHref }) {
+  const router = useRouter();
+  const { collapsed } = useSidebar();
+  const ml = collapsed ? "md:ml-16" : "md:ml-60";
+  const left = collapsed ? "md:left-16" : "md:left-60";
+
+  return (
+    <div className="flex min-h-screen bg-gray-50">
+      <SideNav />
+
+      <div className={`flex-1 flex flex-col transition-all duration-200 ${ml}`}>
+        {/* Header */}
+        <div className={`fixed top-0 right-0 left-0 ${left} z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 transition-all duration-200`}>
+          <div className="flex items-center justify-between px-4 h-14">
+            <div className="flex items-center gap-2">
+              {backHref && (
+                <button
+                  onClick={() => router.push(backHref)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 -ml-1"
+                >
+                  <FiChevronLeft size={20} className="text-gray-600" />
+                </button>
+              )}
+              <h1 className="text-lg font-bold text-gray-900 tracking-tight">{title}</h1>
+            </div>
+            {rightAction && <div className="flex items-center gap-3">{rightAction}</div>}
+          </div>
+        </div>
+
+        {/* Content */}
+        <main className="flex-1 mt-14 pb-24 md:pb-10 overflow-y-auto">
+          <div className="px-4 py-4 max-w-lg mx-auto md:max-w-3xl">{children}</div>
+        </main>
+
+        <BottomNav />
+      </div>
+    </div>
+  );
+}
