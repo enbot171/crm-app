@@ -106,7 +106,7 @@ function AddClientForm() {
 
           <div className="space-y-1">
             <label className="text-xs font-semibold text-gray-700">Custom Follow-up Interval (days)</label>
-            <p className="text-[11px] text-gray-600">How often this client should appear in your follow-up list. Leave blank to use your account default.</p>
+            <p className="text-[11px] text-gray-600">How often this client should appear in your follow-up list. Leave blank to use your account default ({profile?.followUpDays ?? 7} days).</p>
             <input
               type="number"
               min={1}
