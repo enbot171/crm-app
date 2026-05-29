@@ -7,7 +7,7 @@ import { getClientsByAssignee, updateClient } from "@/lib/firestore";
 import { serverTimestamp } from "firebase/firestore";
 import PageShell from "@/components/PageShell";
 import { FiArchive, FiCheck } from "react-icons/fi";
-import { DEFAULT_FOLLOW_UP_DAYS, DEFAULT_INACTIVITY_DAYS, CLIENT_STATUSES, getStatusStyle } from "@/config/app";
+import { DEFAULT_FOLLOW_UP_DAYS, CLIENT_STATUSES, getStatusStyle } from "@/config/app";
 
 function daysSince(date) {
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -26,53 +26,64 @@ function getScheduledDate(c) {
   return new Date(c.scheduledFollowUpAt);
 }
 
-function classifyClients(clients, followUpDays, inactivityDays) {
+function classifyClients(clients, firstFollowUpDays) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const type3 = [], type2 = [], type1 = [], upcoming = [];
+  const typeScheduled = [], typeFirst = [], typeRecurring = [], upcoming = [];
 
   clients.forEach((c) => {
     const ref = getRefDate(c);
-    const scheduled = getScheduledDate(c);
-    const since = ref ? daysSince(ref) : null;
-    const interval = c.followUpDays ?? followUpDays;
+    const scheduledDate = getScheduledDate(c);
 
-    if (scheduled && scheduled <= today) {
-      type3.push({ ...c, _scheduled: scheduled });
+    // Scheduled date has passed
+    if (scheduledDate && scheduledDate <= today) {
+      typeScheduled.push({ ...c, _scheduled: scheduledDate });
       return;
     }
 
-    if (since !== null && since >= inactivityDays) {
-      type2.push({ ...c, _since: since });
+    // Never been contacted — one-time first follow-up
+    if (!c.lastContactedAt) {
+      const createdAt = c.createdAt?.toDate ? c.createdAt.toDate() : (c.createdAt ? new Date(c.createdAt) : null);
+      const sinceCreated = createdAt ? daysSince(createdAt) : null;
+      if (sinceCreated === null) return;
+
+      if (sinceCreated >= firstFollowUpDays) {
+        typeFirst.push({ ...c, _daysOverdue: sinceCreated - firstFollowUpDays });
+      } else {
+        const dueIn = firstFollowUpDays - sinceCreated;
+        if (dueIn <= 7) upcoming.push({ ...c, _dueIn: dueIn });
+      }
       return;
     }
 
-    const createdAt = c.createdAt?.toDate ? c.createdAt.toDate() : (c.createdAt ? new Date(c.createdAt) : null);
-    const daysSinceCreated = createdAt ? daysSince(createdAt) : null;
-    if (!c.lastContactedAt && daysSinceCreated !== null && daysSinceCreated >= interval) {
-      type1.push({ ...c, _daysOverdue: daysSinceCreated - interval });
+    // Already contacted — only trigger if client has a custom recurring interval
+    if (c.followUpDays && ref) {
+      const since = daysSince(ref);
+      if (since >= c.followUpDays) {
+        typeRecurring.push({ ...c, _daysOverdue: since - c.followUpDays });
+      } else {
+        const dueIn = c.followUpDays - since;
+        if (dueIn <= 7) upcoming.push({ ...c, _dueIn: dueIn });
+      }
       return;
     }
 
-    const dueIn = since !== null ? interval - since : null;
-    const scheduledIn = scheduled ? Math.ceil((scheduled - today) / (1000 * 60 * 60 * 24)) : null;
-
-    if ((dueIn !== null && dueIn <= 7) || (scheduledIn !== null && scheduledIn <= 7)) {
-      upcoming.push({ ...c, _dueIn: dueIn, _scheduledIn: scheduledIn });
+    // Future scheduled date within 7 days
+    if (scheduledDate) {
+      const scheduledIn = Math.ceil((scheduledDate - today) / (1000 * 60 * 60 * 24));
+      if (scheduledIn > 0 && scheduledIn <= 7) {
+        upcoming.push({ ...c, _dueIn: scheduledIn });
+      }
     }
   });
 
-  type3.sort((a, b) => a._scheduled - b._scheduled);
-  type2.sort((a, b) => b._since - a._since);
-  type1.sort((a, b) => b._daysOverdue - a._daysOverdue);
-  upcoming.sort((a, b) => {
-    const aMin = Math.min(a._dueIn ?? 99, a._scheduledIn ?? 99);
-    const bMin = Math.min(b._dueIn ?? 99, b._scheduledIn ?? 99);
-    return aMin - bMin;
-  });
+  typeScheduled.sort((a, b) => a._scheduled - b._scheduled);
+  typeFirst.sort((a, b) => b._daysOverdue - a._daysOverdue);
+  typeRecurring.sort((a, b) => b._daysOverdue - a._daysOverdue);
+  upcoming.sort((a, b) => (a._dueIn ?? 99) - (b._dueIn ?? 99));
 
-  return { type1, type2, type3, upcoming };
+  return { typeScheduled, typeFirst, typeRecurring, upcoming };
 }
 
 export default function FollowUps() {
@@ -99,11 +110,9 @@ export default function FollowUps() {
 
   if (loading) return null;
 
-  const followUpDays = profile?.followUpDays ?? DEFAULT_FOLLOW_UP_DAYS;
-  const inactivityDays = profile?.inactivityCheckDays ?? DEFAULT_INACTIVITY_DAYS;
-
-  const { type1, type2, type3, upcoming } = classifyClients(clients, followUpDays, inactivityDays);
-  const totalDue = type1.length + type2.length + type3.length;
+  const firstFollowUpDays = profile?.followUpDays ?? DEFAULT_FOLLOW_UP_DAYS;
+  const { typeScheduled, typeFirst, typeRecurring, upcoming } = classifyClients(clients, firstFollowUpDays);
+  const totalDue = typeScheduled.length + typeFirst.length + typeRecurring.length;
 
   const setAct = (id, val) => setActing((prev) => ({ ...prev, [id]: val }));
   const clearAct = (id) => setActing((prev) => { const n = { ...prev }; delete n[id]; return n; });
@@ -149,14 +158,14 @@ export default function FollowUps() {
         </div>
       ) : (
         <div className="space-y-6">
-          {type3.length > 0 && (
-            <Section label="Scheduled" count={type3.length} accent="text-gray-700">
-              {type3.map((c) => (
+
+          {typeScheduled.length > 0 && (
+            <Section label="Scheduled" count={typeScheduled.length}>
+              {typeScheduled.map((c) => (
                 <ClientRow
                   key={c.id}
                   client={c}
                   badge={`Scheduled · ${c._scheduled.toLocaleDateString([], { month: "short", day: "numeric" })}`}
-                  badgeColor="text-gray-600"
                   onNavigate={() => router.push(`/client/${c.id}`)}
                   onCheck={handleCheck}
                   onArchive={handleArchive}
@@ -167,36 +176,30 @@ export default function FollowUps() {
             </Section>
           )}
 
-          {type2.length > 0 && (
-            <Section label="Check if still active" count={type2.length} accent="text-gray-500">
-              <p className="text-xs text-gray-700 -mt-1">
-                These clients haven't been contacted in {inactivityDays}+ days.
-              </p>
-              {type2.map((c) => (
-                <ClientRow
-                  key={c.id}
-                  client={c}
-                  badge={`${c._since}d without contact`}
-                  badgeColor="text-gray-500"
-                  onNavigate={() => router.push(`/client/${c.id}`)}
-                  onCheck={handleCheck}
-                  onArchive={handleArchive}
-                  acting={acting[c.id]}
-                  statuses={statuses}
-                  checkLabel="Still active"
-                />
-              ))}
-            </Section>
-          )}
-
-          {type1.length > 0 && (
-            <Section label="Follow up" count={type1.length} accent="text-black">
-              {type1.map((c) => (
+          {typeFirst.length > 0 && (
+            <Section label="First follow-up" count={typeFirst.length}>
+              {typeFirst.map((c) => (
                 <ClientRow
                   key={c.id}
                   client={c}
                   badge={c._daysOverdue === 0 ? "Due today" : `${c._daysOverdue}d overdue`}
-                  badgeColor="text-black font-bold"
+                  onNavigate={() => router.push(`/client/${c.id}`)}
+                  onCheck={handleCheck}
+                  onArchive={handleArchive}
+                  acting={acting[c.id]}
+                  statuses={statuses}
+                />
+              ))}
+            </Section>
+          )}
+
+          {typeRecurring.length > 0 && (
+            <Section label="Recurring follow-up" count={typeRecurring.length}>
+              {typeRecurring.map((c) => (
+                <ClientRow
+                  key={c.id}
+                  client={c}
+                  badge={c._daysOverdue === 0 ? "Due today" : `${c._daysOverdue}d overdue`}
                   onNavigate={() => router.push(`/client/${c.id}`)}
                   onCheck={handleCheck}
                   onArchive={handleArchive}
@@ -208,42 +211,40 @@ export default function FollowUps() {
           )}
 
           {upcoming.length > 0 && (
-            <Section label="Coming up" count={upcoming.length} accent="text-gray-400">
-              {upcoming.map((c) => {
-                const dueIn = c._dueIn !== null ? c._dueIn : c._scheduledIn;
-                return (
-                  <ClientRow
-                    key={c.id}
-                    client={c}
-                    badge={dueIn === 0 ? "Due today" : `In ${dueIn}d`}
-                    badgeColor="text-gray-500"
-                    onNavigate={() => router.push(`/client/${c.id}`)}
-                    onCheck={handleCheck}
-                    onArchive={handleArchive}
-                    acting={acting[c.id]}
-                  />
-                );
-              })}
+            <Section label="Coming up" count={upcoming.length}>
+              {upcoming.map((c) => (
+                <ClientRow
+                  key={c.id}
+                  client={c}
+                  badge={c._dueIn === 0 ? "Due today" : `In ${c._dueIn}d`}
+                  onNavigate={() => router.push(`/client/${c.id}`)}
+                  onCheck={handleCheck}
+                  onArchive={handleArchive}
+                  acting={acting[c.id]}
+                  statuses={statuses}
+                />
+              ))}
             </Section>
           )}
+
         </div>
       )}
     </PageShell>
   );
 }
 
-function Section({ label, count, accent, children }) {
+function Section({ label, count, children }) {
   return (
     <div className="space-y-2">
       <p className="text-sm font-bold text-gray-800">
-        {label} <span className={`font-semibold text-sm ${accent}`}>({count})</span>
+        {label} <span className="font-semibold text-gray-500">({count})</span>
       </p>
       {children}
     </div>
   );
 }
 
-function ClientRow({ client, badge, badgeColor, onNavigate, onCheck, onArchive, acting, checkLabel, statuses }) {
+function ClientRow({ client, badge, onNavigate, onCheck, onArchive, acting, statuses }) {
   const isChecking = acting === "checking";
   const isArchiving = acting === "archiving";
   const busy = !!acting;
@@ -262,9 +263,9 @@ function ClientRow({ client, badge, badgeColor, onNavigate, onCheck, onArchive, 
               {client.status}
             </span>
           )}
-          <span className={`text-[10px] font-semibold ${badgeColor}`}>{badge}</span>
+          <span className="text-[10px] font-semibold text-gray-700">{badge}</span>
           {client.followUpDays && (
-            <span className="text-[10px] text-gray-400">· every {client.followUpDays}d</span>
+            <span className="text-[10px] text-gray-600">· every {client.followUpDays}d</span>
           )}
         </div>
       </div>
@@ -277,13 +278,13 @@ function ClientRow({ client, badge, badgeColor, onNavigate, onCheck, onArchive, 
         {isArchiving
           ? <span className="w-3 h-3 rounded-full border border-gray-400 border-t-transparent animate-spin" />
           : <FiArchive size={12} className="text-gray-500" />}
-        <span className="text-xs font-semibold text-gray-500">Archive</span>
+        <span className="text-xs font-semibold text-gray-700">Archive</span>
       </button>
 
       <button
         onClick={() => onCheck(client)}
         disabled={busy}
-        title={checkLabel || "Mark as contacted"}
+        title="Mark as contacted"
         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors disabled:opacity-50 ${
           isChecking ? "bg-black border-black" : "border-gray-300 hover:border-gray-500"
         }`}

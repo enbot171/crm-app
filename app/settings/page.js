@@ -10,7 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import SideNav from "@/components/SideNav";
 import { useSidebar } from "@/context/SidebarContext";
 import { FiLogOut, FiShield, FiPlus, FiX, FiChevronUp, FiChevronDown } from "react-icons/fi";
-import { DEFAULT_FOLLOW_UP_DAYS, DEFAULT_INACTIVITY_DAYS, CLIENT_STATUSES } from "@/config/app";
+import { DEFAULT_FOLLOW_UP_DAYS, CLIENT_STATUSES } from "@/config/app";
 
 const TABS = ["Account", "Follow-ups", "Statuses & Milestones"];
 
@@ -22,7 +22,6 @@ export default function Settings() {
   const [tab, setTab] = useState("Account");
 
   const [followUpDays, setFollowUpDays] = useState(null);
-  const [inactivityDays, setInactivityDays] = useState(null);
   const [savingReminders, setSavingReminders] = useState(false);
   const [savedReminders, setSavedReminders] = useState(false);
 
@@ -37,7 +36,6 @@ export default function Settings() {
   useEffect(() => {
     if (profile) {
       setFollowUpDays(profile.followUpDays ?? DEFAULT_FOLLOW_UP_DAYS);
-      setInactivityDays(profile.inactivityCheckDays ?? DEFAULT_INACTIVITY_DAYS);
       setStatuses(profile.customStatuses ?? CLIENT_STATUSES);
       setMilestones(profile.customMilestones || []);
     }
@@ -50,9 +48,8 @@ export default function Settings() {
 
   const handleSaveReminders = async () => {
     const days = Math.min(365, Math.max(1, parseInt(followUpDays) || DEFAULT_FOLLOW_UP_DAYS));
-    const inDays = Math.min(365, Math.max(7, parseInt(inactivityDays) || DEFAULT_INACTIVITY_DAYS));
     setSavingReminders(true);
-    await save({ followUpDays: days, inactivityCheckDays: inDays });
+    await save({ followUpDays: days });
     setSavingReminders(false);
     setSavedReminders(true);
     setTimeout(() => setSavedReminders(false), 2000);
@@ -184,36 +181,19 @@ export default function Settings() {
             {/* ── Follow-ups Tab ── */}
             {tab === "Follow-ups" && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-5">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Follow-up Reminders</p>
-
-                <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-700">First follow-up after</p>
-                  <p className="text-xs text-gray-700">Remind you to contact a new client this many days after adding them.</p>
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="number" min={1} max={365}
-                      value={followUpDays ?? DEFAULT_FOLLOW_UP_DAYS}
-                      onChange={(e) => setFollowUpDays(e.target.value)}
-                      className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400 bg-gray-50 text-center"
-                    />
-                    <span className="text-sm text-gray-500">days</span>
-                  </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">First Follow-up</p>
+                  <p className="text-xs text-gray-700 mt-1.5">How many days after adding a new client before they appear in your follow-up list for the first time. Once you mark them as contacted, they won't reappear unless you set a recurring interval on their info page.</p>
                 </div>
 
-                <div className="border-t border-gray-100" />
-
-                <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-700">Inactivity check after</p>
-                  <p className="text-xs text-gray-700">Flag clients you haven't contacted in this long — to check if they're still active.</p>
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="number" min={7} max={365}
-                      value={inactivityDays ?? DEFAULT_INACTIVITY_DAYS}
-                      onChange={(e) => setInactivityDays(e.target.value)}
-                      className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400 bg-gray-50 text-center"
-                    />
-                    <span className="text-sm text-gray-500">days</span>
-                  </div>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="number" min={1} max={365}
+                    value={followUpDays ?? DEFAULT_FOLLOW_UP_DAYS}
+                    onChange={(e) => setFollowUpDays(e.target.value)}
+                    className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 outline-none focus:border-gray-400 bg-gray-50 text-center"
+                  />
+                  <span className="text-sm text-gray-700">days after adding</span>
                 </div>
 
                 <button

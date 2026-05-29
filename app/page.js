@@ -10,7 +10,7 @@ import SideNav from "@/components/SideNav";
 import Spinner from "@/components/Spinner";
 import { useSidebar } from "@/context/SidebarContext";
 import { FiCalendar, FiBell, FiSend, FiCheck } from "react-icons/fi";
-import { DEFAULT_FOLLOW_UP_DAYS, DEFAULT_INACTIVITY_DAYS, CLIENT_STATUSES } from "@/config/app";
+import { DEFAULT_FOLLOW_UP_DAYS, CLIENT_STATUSES } from "@/config/app";
 import { requestNotificationPermission, showOverdueNotification } from "@/lib/notifications";
 
 function daysSince(date) {
@@ -29,22 +29,29 @@ function getScheduledDate(c) {
   return c.scheduledFollowUpAt.toDate ? c.scheduledFollowUpAt.toDate() : new Date(c.scheduledFollowUpAt);
 }
 
-function getOverdueClients(clients, followUpDays, inactivityDays) {
+function getOverdueClients(clients, firstFollowUpDays) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return clients
     .filter((c) => {
+      // Scheduled date has passed
       const scheduled = getScheduledDate(c);
       if (scheduled && scheduled <= today) return true;
-      const ref = getRefDate(c);
-      if (!ref) return false;
-      const since = daysSince(ref);
-      const interval = c.followUpDays ?? followUpDays;
-      const createdAt = c.createdAt?.toDate ? c.createdAt.toDate() : (c.createdAt ? new Date(c.createdAt) : null);
-      const sinceCreated = createdAt ? daysSince(createdAt) : null;
-      const isType1 = !c.lastContactedAt && sinceCreated !== null && sinceCreated >= interval;
-      const isType2 = since >= inactivityDays;
-      return isType1 || isType2;
+
+      // Never contacted → one-time first follow-up threshold
+      if (!c.lastContactedAt) {
+        const createdAt = c.createdAt?.toDate ? c.createdAt.toDate() : (c.createdAt ? new Date(c.createdAt) : null);
+        const sinceCreated = createdAt ? daysSince(createdAt) : null;
+        return sinceCreated !== null && sinceCreated >= firstFollowUpDays;
+      }
+
+      // Already contacted → only trigger if client has a custom interval set
+      if (c.followUpDays) {
+        const ref = getRefDate(c);
+        return ref ? daysSince(ref) >= c.followUpDays : false;
+      }
+
+      return false;
     })
     .sort((a, b) => {
       const refA = getRefDate(a), refB = getRefDate(b);
@@ -89,8 +96,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (statsLoading || myClients.length === 0) return;
     const followUpDays = profile?.followUpDays ?? DEFAULT_FOLLOW_UP_DAYS;
-    const inactivityDays = profile?.inactivityCheckDays ?? DEFAULT_INACTIVITY_DAYS;
-    const overdue = getOverdueClients(myClients, followUpDays, inactivityDays);
+    const overdue = getOverdueClients(myClients, followUpDays);
     if (overdue.length > 0) {
       requestNotificationPermission().then((granted) => {
         if (granted) showOverdueNotification(overdue.length);
@@ -101,9 +107,8 @@ export default function Dashboard() {
   if (loading) return <Spinner fullScreen />;
 
   const followUpDays = profile?.followUpDays ?? DEFAULT_FOLLOW_UP_DAYS;
-  const inactivityDays = profile?.inactivityCheckDays ?? DEFAULT_INACTIVITY_DAYS;
   const statuses = profile?.customStatuses ?? CLIENT_STATUSES;
-  const overdueClients = statsLoading ? [] : getOverdueClients(myClients, followUpDays, inactivityDays);
+  const overdueClients = statsLoading ? [] : getOverdueClients(myClients, followUpDays);
   const overdueCount = overdueClients.length;
 
   const now = new Date();

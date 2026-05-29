@@ -256,7 +256,7 @@ export default function ClientDetail() {
             <Field label="Notes" value={form.notes || ""} onChange={(v) => set("notes", v)} textarea />
             <div className="space-y-1">
               <label className="text-xs font-semibold text-gray-700">Custom Follow-up Interval (days)</label>
-              <p className="text-[11px] text-gray-600">How often this client should appear in your follow-up list, counted from the last time you marked them as contacted. Leave blank to use your account default ({profile?.followUpDays ?? DEFAULT_FOLLOW_UP_DAYS} days).</p>
+              <p className="text-[11px] text-gray-600">After each contact, this client will reappear in your follow-up list after this many days. Leave blank for no recurring follow-up.</p>
               <input
                 type="number"
                 min={1}
