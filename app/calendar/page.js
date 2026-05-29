@@ -205,7 +205,7 @@ export default function CalendarPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{m.clientName}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-700">
                         {d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} · {formatTime(m.date)}
                       </p>
                     </div>
@@ -252,7 +252,7 @@ export default function CalendarPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate">{m.clientName}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-700">
                       {d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} · {formatTime(m.date)}
                     </p>
                   </div>

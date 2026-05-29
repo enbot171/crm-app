@@ -141,7 +141,7 @@ export default function Groups() {
         </button>
 
         {selectedGroup.description && (
-          <p className="text-sm text-gray-500 mb-4">{selectedGroup.description}</p>
+          <p className="text-sm text-gray-700 mb-4">{selectedGroup.description}</p>
         )}
 
         <div className="flex items-center justify-between mb-3">
@@ -163,7 +163,7 @@ export default function Groups() {
         ) : groupClients.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
             <FiUsers size={32} className="mx-auto text-gray-300 mb-3" />
-            <p className="text-sm text-gray-500">No clients in this group yet.</p>
+            <p className="text-sm text-gray-700">No clients in this group yet.</p>
             <button
               onClick={() => { setShowAddClients(true); setClientSearch(""); }}
               className="mt-3 text-xs font-semibold text-gray-700 underline"
@@ -246,7 +246,7 @@ export default function Groups() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
           <FiUsers size={40} className="mx-auto text-gray-200 mb-3" />
           <p className="font-semibold text-gray-700">No groups yet</p>
-          <p className="text-sm text-gray-400 mt-1">Create a group to send bulk messages to your clients.</p>
+          <p className="text-sm text-gray-700 mt-1">Create a group to send bulk messages to your clients.</p>
           <button onClick={() => setShowCreate(true)} className="mt-4 px-4 py-2 bg-black text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors">
             Create Group
           </button>
@@ -264,7 +264,7 @@ export default function Groups() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">{g.name}</p>
-                <p className="text-sm text-gray-500">{g.clientIds?.length || 0} clients</p>
+                <p className="text-sm text-gray-700">{g.clientIds?.length || 0} clients</p>
                 {g.description && <p className="text-xs text-gray-400 truncate">{g.description}</p>}
               </div>
               <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 shrink-0">

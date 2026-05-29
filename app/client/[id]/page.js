@@ -219,14 +219,14 @@ export default function ClientDetail() {
             <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-gray-100 text-gray-700">Archived</span>
           )}
         </div>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-700 text-sm mt-1">
           {client.contactType && `${client.contactType} · `}{client.contact}
         </p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-4">
-        {["info", "meetings"].map((t) => (
+        {["info", "milestones", "meetings"].map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setError(""); }}
@@ -256,18 +256,24 @@ export default function ClientDetail() {
             </div>
             <Field label="Contact" value={form.contact} onChange={(v) => set("contact", v)} />
             <Field label="Notes" value={form.notes || ""} onChange={(v) => set("notes", v)} textarea />
-            <Field
-              label="Follow-up every (days)"
-              type="number"
-              value={form.followUpDays ?? ""}
-              onChange={(v) => set("followUpDays", v === "" ? null : v)}
-              placeholder="Use global default"
-            />
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-gray-700">Custom Follow-up Interval (days)</label>
+              <p className="text-[11px] text-gray-600">How often this client should appear in your follow-up list, counted from the last time you marked them as contacted. Leave blank to use your account default.</p>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={form.followUpDays ?? ""}
+                onChange={(e) => set("followUpDays", e.target.value === "" ? null : e.target.value)}
+                placeholder="Use account default"
+                className={inputCls}
+              />
+            </div>
 
             {/* Scheduled follow-up */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-gray-700">Scheduled Follow-up</label>
-              <p className="text-[11px] text-gray-400">Set a specific date to be reminded.</p>
+              <p className="text-[11px] text-gray-600">Set a specific date to be reminded.</p>
               <div className="flex gap-2 items-center">
                 <input
                   type="date"
@@ -311,13 +317,26 @@ export default function ClientDetail() {
             </button>
           </div>
 
-          {/* Milestones */}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full mt-4 py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-xl disabled:opacity-50 transition-colors text-sm"
+          >
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+          {saved && <p className="text-center text-sm font-medium text-gray-700 mt-2">Changes saved.</p>}
+        </div>
+      )}
+
+      {/* ── MILESTONES TAB ── */}
+      {tab === "milestones" && (
+        <div className="space-y-3">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Milestones</p>
+            <p className="text-xs font-semibold text-gray-700 uppercase tracking-widest">Milestones</p>
             {milestones.length === 0 ? (
-              <p className="text-sm text-gray-400">
-                No milestones yet. Add them in{" "}
-                <button onClick={() => router.push("/settings")} className="underline text-gray-600">Settings</button>.
+              <p className="text-sm text-gray-700">
+                No milestones configured. Add them in{" "}
+                <button onClick={() => router.push("/settings")} className="underline font-semibold">Settings</button>.
               </p>
             ) : (
               <div className="space-y-2">
@@ -335,15 +354,14 @@ export default function ClientDetail() {
               </div>
             )}
           </div>
-
           <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full mt-4 py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-xl disabled:opacity-50 transition-colors text-sm"
+            className="w-full py-3 bg-black hover:bg-gray-800 text-white font-semibold rounded-xl disabled:opacity-50 transition-colors text-sm"
           >
             {saving ? "Saving…" : "Save Changes"}
           </button>
-          {saved && <p className="text-center text-sm font-medium text-gray-600 mt-2">Changes saved.</p>}
+          {saved && <p className="text-center text-sm font-medium text-gray-700 mt-2">Changes saved.</p>}
         </div>
       )}
 

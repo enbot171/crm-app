@@ -105,15 +105,15 @@ function AddClientForm() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-gray-700">Follow-up every (days)</label>
-            <p className="text-[11px] text-gray-400">Leave blank to use your global default.</p>
+            <label className="text-xs font-semibold text-gray-700">Custom Follow-up Interval (days)</label>
+            <p className="text-[11px] text-gray-600">How often this client should appear in your follow-up list. Leave blank to use your account default.</p>
             <input
               type="number"
               min={1}
               max={365}
               value={form.followUpDays}
               onChange={(e) => set("followUpDays", e.target.value)}
-              placeholder="Use global default"
+              placeholder="Use account default"
               className={inputCls}
             />
           </div>

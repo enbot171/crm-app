@@ -57,7 +57,7 @@ function getOverdueClients(clients, followUpDays, inactivityDays) {
 function StatCard({ label, value, loading }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
-      <p className="text-gray-500 text-sm font-semibold leading-tight">{label}</p>
+      <p className="text-gray-700 text-sm font-semibold leading-tight">{label}</p>
       <p className="text-gray-900 text-3xl font-bold mt-1">{loading ? "—" : value ?? "—"}</p>
     </div>
   );
@@ -259,7 +259,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{m.clientName}</p>
-                          <p className="text-xs text-gray-400">{d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                          <p className="text-xs text-gray-700">{d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
                         </div>
                       </div>
                     );
@@ -282,7 +282,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{m.clientName}</p>
-                          <p className="text-xs text-gray-400">{d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} · {d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                          <p className="text-xs text-gray-700">{d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })} · {d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
                         </div>
                       </div>
                     );

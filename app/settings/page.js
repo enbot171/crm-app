@@ -188,7 +188,7 @@ export default function Settings() {
 
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-gray-700">First follow-up after</p>
-                  <p className="text-xs text-gray-400">Remind you to contact a new client this many days after adding them.</p>
+                  <p className="text-xs text-gray-700">Remind you to contact a new client this many days after adding them.</p>
                   <div className="flex gap-2 items-center">
                     <input
                       type="number" min={1} max={365}
@@ -204,7 +204,7 @@ export default function Settings() {
 
                 <div className="space-y-1.5">
                   <p className="text-xs font-semibold text-gray-700">Inactivity check after</p>
-                  <p className="text-xs text-gray-400">Flag clients you haven't contacted in this long — to check if they're still active.</p>
+                  <p className="text-xs text-gray-700">Flag clients you haven't contacted in this long — to check if they're still active.</p>
                   <div className="flex gap-2 items-center">
                     <input
                       type="number" min={7} max={365}
@@ -233,7 +233,7 @@ export default function Settings() {
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Pipeline Statuses</p>
-                    <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-gray-700 mt-1.5 leading-relaxed">
                       A status represents where a client currently sits in your sales pipeline — one stage at a time, from first contact to fully converted. Order them from earliest to most advanced. Colors automatically go from light to dark as stages progress.
                     </p>
                   </div>
@@ -293,7 +293,7 @@ export default function Settings() {
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Custom Milestones</p>
-                    <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-gray-700 mt-1.5 leading-relaxed">
                       Milestones are specific achievements in a client's journey that you want to track — like sending a proposal or signing a policy. Unlike statuses, a client can have multiple milestones checked at the same time, and they don't follow a set order.
                     </p>
                   </div>

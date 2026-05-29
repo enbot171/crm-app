@@ -181,7 +181,7 @@ function MessagingInner() {
             </select>
           )}
           {selectedGroupId && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-700">
               {loadingClients ? "Loading…" : `${telegramClients.length} Telegram-eligible client${telegramClients.length !== 1 ? "s" : ""}`}
             </p>
           )}
@@ -213,7 +213,7 @@ function MessagingInner() {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-700">Message Body</label>
-                <p className="text-[11px] text-gray-400">Use {'{{name}}'} for client name, {'{{telegram}}'} for handle, or any {'{{custom_var}}'}.</p>
+                <p className="text-[11px] text-gray-600">Use {'{{name}}'} for client name, {'{{telegram}}'} for handle, or any {'{{custom_var}}'}.</p>
                 <textarea
                   value={templateForm.body}
                   onChange={(e) => setTemplateForm((f) => ({ ...f, body: e.target.value }))}
@@ -223,7 +223,7 @@ function MessagingInner() {
                 />
               </div>
               {templateForm.body && extractVariables(templateForm.body).length > 0 && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-700">
                   Variables: {extractVariables(templateForm.body).map((v) => (
                     <span key={v} className="mx-0.5 px-1.5 py-0.5 bg-gray-200 rounded text-gray-700">{v}</span>
                   ))}
@@ -257,7 +257,7 @@ function MessagingInner() {
                   <div className={`w-4 h-4 rounded-full border-2 shrink-0 mt-0.5 transition-colors ${selectedTemplateId === t.id ? "bg-black border-black" : "border-gray-300"}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900">{t.name}</p>
-                    <p className="text-xs text-gray-500 truncate mt-0.5">{t.body}</p>
+                    <p className="text-xs text-gray-700 truncate mt-0.5">{t.body}</p>
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(t); }}
@@ -312,7 +312,7 @@ function MessagingInner() {
           <div className="space-y-3">
             <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4 space-y-1">
               <p className="text-sm font-semibold text-gray-800">BulkMessenger not running</p>
-              <p className="text-xs text-gray-500">Start BulkMessenger at localhost:8080, or copy each message below manually.</p>
+              <p className="text-xs text-gray-700">Start BulkMessenger at localhost:8080, or copy each message below manually.</p>
             </div>
             {preview.map(({ client, message }, idx) => (
               <div key={client.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-2">

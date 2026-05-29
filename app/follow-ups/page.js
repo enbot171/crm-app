@@ -145,7 +145,7 @@ export default function FollowUps() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center">
           <p className="text-2xl mb-2">🎉</p>
           <p className="font-semibold text-gray-800">All caught up!</p>
-          <p className="text-sm text-gray-400 mt-1">No follow-ups due in the next 7 days.</p>
+          <p className="text-sm text-gray-700 mt-1">No follow-ups due in the next 7 days.</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -169,7 +169,7 @@ export default function FollowUps() {
 
           {type2.length > 0 && (
             <Section label="Check if still active" count={type2.length} accent="text-gray-500">
-              <p className="text-xs text-gray-400 -mt-1">
+              <p className="text-xs text-gray-700 -mt-1">
                 These clients haven't been contacted in {inactivityDays}+ days.
               </p>
               {type2.map((c) => (
@@ -252,7 +252,7 @@ function ClientRow({ client, badge, badgeColor, onNavigate, onCheck, onArchive, 
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
       <div className="flex-1 min-w-0 cursor-pointer" onClick={onNavigate}>
         <p className="font-semibold text-gray-900 truncate">{client.name}</p>
-        <p className="text-sm text-gray-500 truncate">
+        <p className="text-sm text-gray-700 truncate">
           {client.contactType && <span>{client.contactType} · </span>}
           {client.contact}
         </p>
