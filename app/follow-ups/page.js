@@ -7,7 +7,7 @@ import { getClientsByAssignee, updateClient } from "@/lib/firestore";
 import { serverTimestamp } from "firebase/firestore";
 import PageShell from "@/components/PageShell";
 import { FiArchive, FiCheck } from "react-icons/fi";
-import { DEFAULT_FOLLOW_UP_DAYS, DEFAULT_INACTIVITY_DAYS, STATUS_STYLES } from "@/config/app";
+import { DEFAULT_FOLLOW_UP_DAYS, DEFAULT_INACTIVITY_DAYS, CLIENT_STATUSES, getStatusStyle } from "@/config/app";
 
 function daysSince(date) {
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
@@ -77,6 +77,7 @@ function classifyClients(clients, followUpDays, inactivityDays) {
 
 export default function FollowUps() {
   const { user, profile, loading } = useRequireAuth();
+  const statuses = profile?.customStatuses ?? CLIENT_STATUSES;
   const router = useRouter();
   const [clients, setClients] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -160,6 +161,7 @@ export default function FollowUps() {
                   onCheck={handleCheck}
                   onArchive={handleArchive}
                   acting={acting[c.id]}
+                  statuses={statuses}
                 />
               ))}
             </Section>
@@ -180,6 +182,7 @@ export default function FollowUps() {
                   onCheck={handleCheck}
                   onArchive={handleArchive}
                   acting={acting[c.id]}
+                  statuses={statuses}
                   checkLabel="Still active"
                 />
               ))}
@@ -198,6 +201,7 @@ export default function FollowUps() {
                   onCheck={handleCheck}
                   onArchive={handleArchive}
                   acting={acting[c.id]}
+                  statuses={statuses}
                 />
               ))}
             </Section>
@@ -239,7 +243,7 @@ function Section({ label, count, accent, children }) {
   );
 }
 
-function ClientRow({ client, badge, badgeColor, onNavigate, onCheck, onArchive, acting, checkLabel }) {
+function ClientRow({ client, badge, badgeColor, onNavigate, onCheck, onArchive, acting, checkLabel, statuses }) {
   const isChecking = acting === "checking";
   const isArchiving = acting === "archiving";
   const busy = !!acting;
@@ -254,7 +258,7 @@ function ClientRow({ client, badge, badgeColor, onNavigate, onCheck, onArchive, 
         </p>
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           {client.status && (
-            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${STATUS_STYLES[client.status] || "bg-gray-100 text-gray-700"}`}>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${getStatusStyle(statuses, client.status)}`}>
               {client.status}
             </span>
           )}

@@ -54,25 +54,6 @@ function getOverdueClients(clients, followUpDays, inactivityDays) {
     });
 }
 
-const PERIODS = ["Daily", "Weekly", "All Time"];
-
-function getPeriodStart(period) {
-  const now = new Date();
-  if (period === "Daily") return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (period === "Weekly") {
-    const day = now.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
-  }
-  return null;
-}
-
-function toDate(val) {
-  if (!val) return null;
-  if (val.toDate) return val.toDate();
-  return new Date(val);
-}
-
 function StatCard({ label, value, loading }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
@@ -91,7 +72,6 @@ export default function Dashboard() {
   const [myClients, setMyClients] = useState([]);
   const [allMeetings, setAllMeetings] = useState([]);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [period, setPeriod] = useState("Weekly");
   const [texting, setTexting] = useState(new Set());
 
   useEffect(() => {
@@ -122,6 +102,7 @@ export default function Dashboard() {
 
   const followUpDays = profile?.followUpDays ?? DEFAULT_FOLLOW_UP_DAYS;
   const inactivityDays = profile?.inactivityCheckDays ?? DEFAULT_INACTIVITY_DAYS;
+  const statuses = profile?.customStatuses ?? CLIENT_STATUSES;
   const overdueClients = statsLoading ? [] : getOverdueClients(myClients, followUpDays, inactivityDays);
   const overdueCount = overdueClients.length;
 
@@ -137,15 +118,9 @@ export default function Dashboard() {
     return d >= now;
   }).slice(0, 3);
 
-  const start = getPeriodStart(period);
-  const meetingCount = allMeetings.filter((m) => {
-    if (m.completed !== true) return false;
-    if (!start) return true;
-    const d = toDate(m.date);
-    return d && d >= start;
-  }).length;
+  const totalMeetings = allMeetings.filter((m) => m.completed === true).length;
 
-  const statusCounts = CLIENT_STATUSES.reduce((acc, s) => {
+  const statusCounts = statuses.reduce((acc, s) => {
     acc[s] = myClients.filter((c) => c.status === s).length;
     return acc;
   }, {});
@@ -161,8 +136,8 @@ export default function Dashboard() {
 
   const myMetrics = [
     { label: "Total Clients", value: myClients.length },
-    ...CLIENT_STATUSES.map((s) => ({ label: s, value: statusCounts[s] })),
-    { label: period === "All Time" ? "Total Meetings" : `${period} Meetings`, value: meetingCount },
+    { label: "Total Meetings", value: totalMeetings },
+    ...statuses.map((s) => ({ label: s, value: statusCounts[s] })),
   ];
 
   return (
@@ -317,42 +292,12 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Period selector */}
-            <div className="flex gap-1 bg-gray-200 p-1 rounded-xl">
-              {PERIODS.map((p) => (
-                <button key={p} onClick={() => setPeriod(p)} className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${period === p ? "bg-white text-gray-900 shadow-sm" : "text-gray-600"}`}>
-                  {p}
-                </button>
-              ))}
-            </div>
-
             {/* Stats grid */}
             <p className="text-lg font-bold text-gray-800">My Stats</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {myMetrics.map((m) => (
                 <StatCard key={m.label} label={m.label} value={m.value} loading={statsLoading} />
               ))}
-            </div>
-
-            {/* Pipeline bars */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm space-y-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Pipeline</p>
-              {CLIENT_STATUSES.map((s) => {
-                const count = statusCounts[s] || 0;
-                const total = myClients.length || 1;
-                const pct = Math.round((count / total) * 100);
-                return (
-                  <div key={s} className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-semibold text-gray-700">{s}</span>
-                      <span className="text-sm font-bold text-gray-900">{count}</span>
-                    </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-black rounded-full transition-all" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
             </div>
 
           </div>

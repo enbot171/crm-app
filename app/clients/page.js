@@ -6,15 +6,8 @@ import { getClientsByAssignee, getArchivedClientsByAssignee, updateClient } from
 import PageShell from "@/components/PageShell";
 import ClientCard from "@/components/ClientCard";
 import SearchBar from "@/components/SearchBar";
-import { CLIENT_STATUSES, CONTACT_TYPES } from "@/config/app";
+import { CLIENT_STATUSES, CONTACT_TYPES, getStatusColor } from "@/config/app";
 import { FiSliders, FiCheckSquare } from "react-icons/fi";
-
-const STATUS_COLORS = {
-  Prospect: "bg-gray-400",
-  "Warm Lead": "bg-gray-500",
-  "Strong Client": "bg-gray-700",
-  Client: "bg-black",
-};
 
 const EMPTY_FILTERS = { contactType: "", status: "" };
 
@@ -36,7 +29,8 @@ function FilterSelect({ label, value, onChange, options }) {
 }
 
 export default function Clients() {
-  const { user, loading } = useRequireAuth();
+  const { user, profile, loading } = useRequireAuth();
+  const statuses = profile?.customStatuses ?? CLIENT_STATUSES;
   const [clients, setClients] = useState([]);
   const [archived, setArchived] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -146,7 +140,7 @@ export default function Clients() {
               label="Status"
               value={filters.status}
               onChange={(v) => setFilter("status", v)}
-              options={[{ value: "", label: "All" }, ...CLIENT_STATUSES.map((s) => ({ value: s, label: s }))]}
+              options={[{ value: "", label: "All" }, ...statuses.map((s) => ({ value: s, label: s }))]}
             />
           </div>
           {activeFilterCount > 0 && (
@@ -167,7 +161,7 @@ export default function Clients() {
         >
           Archived
         </button>
-        {!showArchived && CLIENT_STATUSES.map((s) => {
+        {!showArchived && statuses.map((s) => {
           const active = activeStatus === s;
           return (
             <button
@@ -175,7 +169,7 @@ export default function Clients() {
               onClick={() => setActiveStatus(active ? "" : s)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all shadow-sm ${
                 active
-                  ? `${STATUS_COLORS[s] || "bg-black"} text-white border-transparent`
+                  ? `${getStatusColor(statuses, s)} text-white border-transparent`
                   : "bg-white text-gray-600 border-gray-200"
               }`}
             >

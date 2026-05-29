@@ -1,10 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { STATUS_STYLES } from "@/config/app";
+import { useAuth } from "@/context/AuthContext";
+import { CLIENT_STATUSES, getStatusStyle } from "@/config/app";
 
 export default function ClientCard({ client, onRemove, onSelect, selected }) {
   const router = useRouter();
+  const { profile } = useAuth();
+  const statuses = profile?.customStatuses ?? CLIENT_STATUSES;
 
   const handleClick = () => {
     if (onSelect) { onSelect(client); return; }
@@ -34,7 +37,7 @@ export default function ClientCard({ client, onRemove, onSelect, selected }) {
         </p>
         {client.status && (
           <div className="mt-1.5">
-            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${STATUS_STYLES[client.status] || "bg-gray-100 text-gray-700"}`}>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${getStatusStyle(statuses, client.status)}`}>
               {client.status}
             </span>
           </div>

@@ -8,7 +8,7 @@ import { serverTimestamp, Timestamp } from "firebase/firestore";
 import PageShell from "@/components/PageShell";
 import { FaArchive } from "react-icons/fa";
 import { FiPlus, FiX, FiTrash2, FiCheck } from "react-icons/fi";
-import { CLIENT_STATUSES, CONTACT_TYPES, STATUS_STYLES } from "@/config/app";
+import { CLIENT_STATUSES, CONTACT_TYPES, getStatusStyle } from "@/config/app";
 
 const inputCls = "w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-gray-400 focus:bg-white transition-colors";
 
@@ -186,6 +186,7 @@ export default function ClientDetail() {
     return d < now;
   }).reverse();
 
+  const statuses = profile?.customStatuses ?? CLIENT_STATUSES;
   const milestones = profile?.customMilestones || [];
 
   return (
@@ -210,7 +211,7 @@ export default function ClientDetail() {
         </div>
         <div className="flex flex-wrap gap-1.5 justify-center">
           {client.status && (
-            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${STATUS_STYLES[client.status] || "bg-gray-100 text-gray-700"}`}>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${getStatusStyle(statuses, client.status)}`}>
               {client.status}
             </span>
           )}
@@ -251,7 +252,7 @@ export default function ClientDetail() {
             <Field label="Name" value={form.name} onChange={(v) => set("name", v)} />
             <div className="grid grid-cols-2 gap-3">
               <Field label="Contact Type" value={form.contactType} onChange={(v) => set("contactType", v)} select={CONTACT_TYPES} />
-              <Field label="Status" value={form.status} onChange={(v) => set("status", v)} select={CLIENT_STATUSES} />
+              <Field label="Status" value={form.status} onChange={(v) => set("status", v)} select={statuses} />
             </div>
             <Field label="Contact" value={form.contact} onChange={(v) => set("contact", v)} />
             <Field label="Notes" value={form.notes || ""} onChange={(v) => set("notes", v)} textarea />
